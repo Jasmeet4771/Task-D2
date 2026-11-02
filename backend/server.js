@@ -1,4 +1,3 @@
-
 const cors = require("cors");
 const express = require("express");
 const dotenv = require("dotenv");
@@ -17,10 +16,6 @@ const {
   getFirestore,
   FieldValue,
 } = require("firebase-admin/firestore");
-
-// ========================================
-// 1. CONFIGURATION
-// ========================================
 
 dotenv.config({
   path: path.join(__dirname, ".env"),
@@ -48,10 +43,6 @@ app.use(cors({
 
 app.use(express.json({ limit: "50kb" }));
 
-// ========================================
-// 2. FIREBASE ADMIN INITIALIZATION
-// ========================================
-
 const serviceAccount = require(
   path.join(__dirname, "service-account.json")
 );
@@ -68,10 +59,6 @@ const db = getFirestore(firebaseApp);
 
 console.log("Firebase Admin initialized successfully.");
 
-// ========================================
-// 3. AUTHENTICATION MIDDLEWARE
-// ========================================
-
 async function verifyUser(req, res, next) {
   try {
     const authHeader = req.headers.authorization;
@@ -83,11 +70,9 @@ async function verifyUser(req, res, next) {
     }
 
     const token = authHeader.split(" ")[1];
-
     req.user = await auth.verifyIdToken(token);
 
     return next();
-
   } catch (error) {
     console.error("Authentication error:", error.message);
 
@@ -96,10 +81,6 @@ async function verifyUser(req, res, next) {
     });
   }
 }
-
-// ========================================
-// 4. VERIFY USER SUBSCRIPTION
-// ========================================
 
 async function verifyUserPlan(req, res, next) {
   try {
@@ -122,7 +103,6 @@ async function verifyUserPlan(req, res, next) {
     };
 
     return next();
-
   } catch (error) {
     console.error("Subscription verification error:", error);
 
@@ -132,15 +112,10 @@ async function verifyUserPlan(req, res, next) {
   }
 }
 
-// ========================================
-// 5. OPTIONAL AUTHENTICATION
-// ========================================
-
 async function optionalAuth(req, res, next) {
   try {
     const authHeader = req.headers.authorization;
 
-    // Visitors can browse Free posts.
     if (!authHeader) {
       req.subscriptionPlan = "free";
       return next();
@@ -153,7 +128,6 @@ async function optionalAuth(req, res, next) {
     }
 
     const token = authHeader.split(" ")[1];
-
     const decodedToken = await auth.verifyIdToken(token);
 
     const userSnapshot = await db
@@ -166,12 +140,10 @@ async function optionalAuth(req, res, next) {
       : {};
 
     req.user = decodedToken;
-
     req.subscriptionPlan =
       userData.plan === "paid" ? "paid" : "free";
 
     return next();
-
   } catch (error) {
     console.error("Optional authentication error:", error.message);
 
@@ -180,10 +152,6 @@ async function optionalAuth(req, res, next) {
     });
   }
 }
-
-// ========================================
-// 6. POST VALIDATION
-// ========================================
 
 function validatePost(data) {
   const {
@@ -235,9 +203,7 @@ function validatePost(data) {
     tag => tag.trim().toLowerCase()
   );
 
-  if (
-    new Set(normalizedTags).size !== normalizedTags.length
-  ) {
+  if (new Set(normalizedTags).size !== normalizedTags.length) {
     return "Duplicate tags are not allowed.";
   }
 
@@ -272,20 +238,12 @@ function validatePost(data) {
   return null;
 }
 
-// ========================================
-// 7. HEALTH CHECK
-// ========================================
-
 app.get("/api/health", (req, res) => {
   return res.status(200).json({
     success: true,
     message: "DEV@Deakin backend is running.",
   });
 });
-
-// ========================================
-// 8. CREATE POST API
-// ========================================
 
 app.post(
   "/api/posts",
@@ -311,7 +269,6 @@ app.post(
         articleText,
       } = req.body;
 
-      // Free users cannot create Paid posts.
       if (
         plan === "paid" &&
         req.userProfile.plan !== "paid"
@@ -325,18 +282,12 @@ app.post(
         type,
         plan,
         title: title.trim(),
-
-        tags: tags.map(
-          tag => tag.trim().toLowerCase()
-        ),
-
+        tags: tags.map(tag => tag.trim().toLowerCase()),
         authorId: req.user.uid,
-
         authorName:
           req.userProfile.fullName ||
           req.user.name ||
           "DEV@Deakin User",
-
         createdAt: FieldValue.serverTimestamp(),
       };
 
@@ -360,7 +311,6 @@ app.post(
         message: "Post published successfully!",
         postId: postRef.id,
       });
-
     } catch (error) {
       console.error("Post creation error:", error);
 
@@ -371,53 +321,29 @@ app.post(
   }
 );
 
-// ========================================
-// 9. BROWSE POSTS API
-// ========================================
-
 app.get("/api/posts", optionalAuth, async (req, res) => {
   try {
-    const {
-      type,
-      plan,
-      tag,
-      from,
-      to,
-    } = req.query;
-
+    const { type, plan, tag, from, to } = req.query;
     const userPlan = req.subscriptionPlan;
 
-    // Validate type filter.
-    if (
-      type &&
-      !["Question", "Article"].includes(type)
-    ) {
+    if (type && !["Question", "Article"].includes(type)) {
       return res.status(400).json({
         message: "Invalid post type filter.",
       });
     }
 
-    // Validate plan filter.
-    if (
-      plan &&
-      !["free", "paid"].includes(plan)
-    ) {
+    if (plan && !["free", "paid"].includes(plan)) {
       return res.status(400).json({
         message: "Invalid post plan filter.",
       });
     }
 
-    // Validate tag.
-    if (
-      tag &&
-      (typeof tag !== "string" || tag.trim().length > 30)
-    ) {
+    if (tag && (typeof tag !== "string" || tag.trim().length > 30)) {
       return res.status(400).json({
         message: "Invalid tag filter.",
       });
     }
 
-    // Validate dates.
     const fromDate = from ? new Date(from) : null;
     const toDate = to ? new Date(to) : null;
 
@@ -436,7 +362,6 @@ app.get("/api/posts", optionalAuth, async (req, res) => {
       });
     }
 
-    // Retrieve posts from Firestore.
     const snapshot = await db
       .collection("posts")
       .get();
@@ -446,28 +371,19 @@ app.get("/api/posts", optionalAuth, async (req, res) => {
       ...document.data(),
     }));
 
-    // SECURITY: Apply subscription restrictions FIRST.
+    // Restrict access before applying other filters.
     if (userPlan === "free") {
-      posts = posts.filter(
-        post => post.plan === "free"
-      );
+      posts = posts.filter(post => post.plan === "free");
     }
 
-    // Apply type filter.
     if (type) {
-      posts = posts.filter(
-        post => post.type === type
-      );
+      posts = posts.filter(post => post.type === type);
     }
 
-    // Apply plan filter.
     if (plan) {
-      posts = posts.filter(
-        post => post.plan === plan
-      );
+      posts = posts.filter(post => post.plan === plan);
     }
 
-    // Apply tag filter.
     if (tag) {
       const searchTag = tag.trim().toLowerCase();
 
@@ -478,33 +394,26 @@ app.get("/api/posts", optionalAuth, async (req, res) => {
       );
     }
 
-    // Apply start date filter.
     if (fromDate) {
       posts = posts.filter(post => {
         const date = post.createdAt?.toDate?.();
-
         return date && date >= fromDate;
       });
     }
 
-    // Apply end date filter.
     if (toDate) {
       posts = posts.filter(post => {
         const date = post.createdAt?.toDate?.();
-
         return date && date <= toDate;
       });
     }
 
-    // Sort newest posts first.
     posts.sort((a, b) => {
       const dateA = a.createdAt?.toMillis?.() || 0;
       const dateB = b.createdAt?.toMillis?.() || 0;
-
       return dateB - dateA;
     });
 
-    // Convert Firestore timestamps to ISO strings.
     const formattedPosts = posts.map(post => ({
       ...post,
       createdAt: post.createdAt?.toDate
@@ -518,7 +427,6 @@ app.get("/api/posts", optionalAuth, async (req, res) => {
       totalPosts: formattedPosts.length,
       posts: formattedPosts,
     });
-
   } catch (error) {
     console.error("Browse posts error:", error);
 
@@ -527,10 +435,6 @@ app.get("/api/posts", optionalAuth, async (req, res) => {
     });
   }
 });
-
-// ========================================
-// 10. NEWSLETTER SUBSCRIPTION
-// ========================================
 
 app.post("/subscribe", async (req, res) => {
   try {
@@ -573,7 +477,6 @@ app.post("/subscribe", async (req, res) => {
     return res.status(202).json({
       message: "Subscription successful! Check your inbox.",
     });
-
   } catch (error) {
     console.error(
       "SendGrid error:",
@@ -585,10 +488,6 @@ app.post("/subscribe", async (req, res) => {
     });
   }
 });
-
-// ========================================
-// 11. ERROR HANDLING
-// ========================================
 
 app.use((error, req, res, next) => {
   if (error instanceof SyntaxError && error.status === 400) {
@@ -603,10 +502,6 @@ app.use((error, req, res, next) => {
     message: "An unexpected server error occurred.",
   });
 });
-
-// ========================================
-// 12. START SERVER
-// ========================================
 
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`Backend running on port ${PORT}`);
