@@ -1,0 +1,163 @@
+
+/* Day 1 portfolio - independent styles */
+
+.day1-portfolio {
+    background-color: white;
+    margin: 0 auto;
+    padding: 0 20px;
+    max-width: 1100px;
+    color: #008c95;
+}
+
+/* Banner */
+.day1-banner {
+    position: relative;
+    height: 300px;
+    overflow: hidden;
+}
+
+.day1-banner img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+}
+
+.day1-banner-text {
+    position: absolute;
+    background-color: #008c95;
+    bottom: 10px;
+    left: 0;
+    width: 100%;
+    text-align: center;
+    color: white;
+    font-size: 25px;
+    padding: 10px;
+    opacity: 0;
+}
+
+.day1-banner:hover .day1-banner-text {
+    opacity: 0.85;
+}
+
+/* Profile */
+.day1-profile {
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+    border: 3px solid #008c95;
+    border-radius: 50%;
+    display: block;
+    margin: 20px auto;
+}
+
+.day1-intro {
+    color: #008c95;
+    text-align: center;
+    font-weight: normal;
+}
+
+.day1-line {
+    border: 2px solid #008c95;
+    border-radius: 20px;
+    width: 20%;
+    margin: 30px auto;
+}
+
+/* Project heading */
+.day1-heading {
+    color: #008c95;
+    text-align: center;
+    font-size: 24px;
+    font-weight: normal;
+    margin: 25px 0;
+}
+
+/* Projects */
+.day1-project {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    align-items: center;
+    margin: 25px 0;
+}
+
+.day1-project img {
+    height: 220px;
+    max-width: 45%;
+    object-fit: contain;
+    display: block;
+    border: 4px solid #008c95;
+}
+
+.day1-project img.day1-upnxt {
+    border-radius: 35px;
+}
+
+.day1-project p {
+    color: #008c95;
+    font-size: 15px;
+    line-height: 1.6;
+}
+
+.day1-project a {
+    color: #008c95;
+    font-size: 18px;
+}
+
+/* Photo gallery */
+.day1-photos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+    padding-bottom: 25px;
+}
+
+.day1-photos img {
+    height: 250px;
+    max-width: 100%;
+    object-fit: contain;
+    border: 4px solid #008c95;
+}
+
+/* Mobile layout */
+@media (max-width: 600px) {
+    .day1-portfolio {
+        padding: 0 12px;
+    }
+
+    .day1-banner {
+        height: 220px;
+    }
+
+    .day1-banner-text {
+        opacity: 0.85;
+        font-size: 20px;
+    }
+
+    .day1-project {
+        gap: 12px;
+    }
+
+    .day1-project img {
+        height: 160px;
+        max-width: 42%;
+    }
+
+    .day1-project p {
+        font-size: 13px;
+    }
+
+    .day1-project a {
+        font-size: 15px;
+    }
+
+    .day1-photos {
+        gap: 12px;
+    }
+
+    .day1-photos img {
+        height: 180px;
+    }
+}
